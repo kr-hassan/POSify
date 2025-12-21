@@ -47,6 +47,16 @@ class Sale extends Model
     {
         return $this->hasMany(SaleItem::class);
     }
+
+    public function saleReturns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
+    }
+
+    public function getTotalReturnedAttribute()
+    {
+        return $this->saleReturns()->sum('total_amount');
+    }
 }
 
 
