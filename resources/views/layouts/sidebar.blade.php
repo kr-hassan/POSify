@@ -47,6 +47,12 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('sale-returns.*') ? 'active' : '' }}" href="{{ route('sale-returns.index') }}">
+                    <i class="bi bi-arrow-return-left"></i> Product Returns
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                     <i class="bi bi-cash-coin"></i> Payment Receipts
                 </a>

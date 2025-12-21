@@ -14,6 +14,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SaleReturnController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -62,6 +63,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
         Route::get('/{sale}/invoice', [SaleController::class, 'invoice'])->name('invoice');
         Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Sale Returns
+    Route::prefix('sale-returns')->name('sale-returns.')->group(function () {
+        Route::get('/', [SaleReturnController::class, 'index'])->name('index');
+        Route::get('/create/{sale}', [SaleReturnController::class, 'create'])->name('create');
+        Route::post('/{sale}', [SaleReturnController::class, 'store'])->name('store');
+        Route::get('/{saleReturn}', [SaleReturnController::class, 'show'])->name('show');
     });
     
     // Purchases
