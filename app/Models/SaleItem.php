@@ -33,6 +33,11 @@ class SaleItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function warranty(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\Warranty::class);
+    }
 }
 
 

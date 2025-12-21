@@ -8,6 +8,7 @@ use App\Http\Requests\StoreSaleRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class SaleController extends Controller
 {
@@ -97,12 +98,12 @@ class SaleController extends Controller
                 'sale_date' => now()->toDateString(),
             ]);
             
-            // Create sale items and update stock
+            // Create sale items, update stock, and create warranties
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
                 $itemTotal = $item['quantity'] * $item['price'];
                 
-                $sale->saleItems()->create([
+                $saleItem = $sale->saleItems()->create([
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
@@ -111,6 +112,40 @@ class SaleController extends Controller
                 
                 // Reduce stock
                 $product->decrement('stock', $item['quantity']);
+                
+                // Automatically create warranty if product has warranty period
+                $warrantyMonths = $product->warranty_period_months;
+                
+                // If warranty_period_months is null/0 but warranty_period_days exists, convert it
+                if (($warrantyMonths === null || $warrantyMonths == 0) && isset($product->warranty_period_days) && $product->warranty_period_days > 0) {
+                    // Convert days to months (approximate: days / 30)
+                    $warrantyMonths = (int) round($product->warranty_period_days / 30);
+                    // Update product to have months for future sales
+                    $product->update(['warranty_period_months' => $warrantyMonths]);
+                }
+                
+                if ($warrantyMonths > 0) {
+                    $startDate = Carbon::parse($sale->sale_date);
+                    $endDate = $startDate->copy()->addMonths($warrantyMonths);
+                    $warrantyDays = $startDate->diffInDays($endDate);
+                    
+                    // Generate warranty number
+                    $warrantyNo = 'WAR-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+                    
+                    // Create warranty for this sale item
+                    \App\Models\Warranty::create([
+                        'warranty_no' => $warrantyNo,
+                        'sale_id' => $sale->id,
+                        'sale_item_id' => $saleItem->id,
+                        'customer_id' => $sale->customer_id,
+                        'product_id' => $product->id,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'warranty_period_months' => $warrantyMonths,
+                        'warranty_period_days' => $warrantyDays,
+                        'status' => 'active',
+                    ]);
+                }
             }
             
             // Update customer balance if due amount exists
@@ -149,7 +184,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load(['user', 'customer', 'saleItems.product.category', 'saleReturns']);
+        $sale->load(['user', 'customer', 'saleItems.product.category', 'saleItems.warranty', 'saleReturns']);
         return view('sales.show', compact('sale'));
     }
 
@@ -167,6 +202,13 @@ class SaleController extends Controller
             // Restore stock
             foreach ($sale->saleItems as $item) {
                 $item->product->increment('stock', $item->quantity);
+            }
+            
+            // Delete associated warranties
+            foreach ($sale->saleItems as $item) {
+                if ($item->warranty) {
+                    $item->warranty->delete();
+                }
             }
             
             // Update customer balance if needed

@@ -15,6 +15,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SaleReturnController;
+use App\Http\Controllers\WarrantyController;
+use App\Http\Controllers\WarrantyClaimController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -71,6 +73,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/create/{sale}', [SaleReturnController::class, 'create'])->name('create');
         Route::post('/{sale}', [SaleReturnController::class, 'store'])->name('store');
         Route::get('/{saleReturn}', [SaleReturnController::class, 'show'])->name('show');
+    });
+    
+    // Warranties
+    Route::prefix('warranties')->name('warranties.')->group(function () {
+        Route::get('/', [WarrantyController::class, 'index'])->name('index');
+        Route::get('/create/{sale}', [WarrantyController::class, 'create'])->name('create');
+        Route::post('/{sale}', [WarrantyController::class, 'store'])->name('store');
+        Route::get('/{warranty}', [WarrantyController::class, 'show'])->name('show');
+        Route::patch('/{warranty}/status', [WarrantyController::class, 'updateStatus'])->name('update-status');
+    });
+    
+    // Warranty Claims
+    Route::prefix('warranty-claims')->name('warranty-claims.')->group(function () {
+        Route::get('/', [WarrantyClaimController::class, 'index'])->name('index');
+        Route::get('/create/{warranty}', [WarrantyClaimController::class, 'create'])->name('create');
+        Route::post('/{warranty}', [WarrantyClaimController::class, 'store'])->name('store');
+        Route::get('/{warrantyClaim}', [WarrantyClaimController::class, 'show'])->name('show');
+        Route::get('/{warrantyClaim}/receipt', [WarrantyClaimController::class, 'receipt'])->name('receipt');
+        Route::patch('/{warrantyClaim}/status', [WarrantyClaimController::class, 'updateStatus'])->name('update-status');
     });
     
     // Purchases

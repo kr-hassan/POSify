@@ -96,6 +96,17 @@
                             </div>
                         </div>
                         
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Warranty Period (Months) *</label>
+                                <input type="number" name="warranty_period_months" class="form-control @error('warranty_period_months') is-invalid @enderror" value="{{ old('warranty_period_months', $product->warranty_period_months ?? 12) }}" min="0" max="120" required placeholder="e.g., 12 for 1 year">
+                                <small class="text-muted">Default warranty period for this product. Set 0 for no warranty. Default: 12 months (1 year)</small>
+                                @error('warranty_period_months')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="is_active" value="1" id="isActive" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>

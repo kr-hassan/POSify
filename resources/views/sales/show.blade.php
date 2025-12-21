@@ -42,7 +42,24 @@
                             <tbody>
                                 @foreach($sale->saleItems as $item)
                                 <tr>
-                                    <td>{{ $item->product->name }}</td>
+                                    <td>
+                                        {{ $item->product->name }}
+                                        @if($item->warranty)
+                                            <br><small>
+                                                <a href="{{ route('warranties.show', $item->warranty) }}" class="text-decoration-none">
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-shield-check"></i> Warranty: {{ $item->warranty->warranty_no }}
+                                                    </span>
+                                                </a>
+                                            </small>
+                                        @elseif($item->product->warranty_period_months > 0)
+                                            <br><small>
+                                                <span class="badge bg-warning">
+                                                    Warranty period: {{ $item->product->warranty_period_months }} months (auto-created on sale)
+                                                </span>
+                                            </small>
+                                        @endif
+                                    </td>
                                     <td>{{ $item->quantity }}</td>
                                     <td>${{ number_format($item->price, 2) }}</td>
                                     <td>${{ number_format($item->total, 2) }}</td>
@@ -96,6 +113,32 @@
                         </a>
                         <small class="text-muted">({{ $return->return_date->format('M d, Y') }})</small>
                     </p>
+                    @endforeach
+                    @endif
+                    
+                    @php
+                        $warranties = $sale->saleItems()->whereHas('warranty')->with('warranty')->get();
+                    @endphp
+                    @if($warranties->count() > 0)
+                    <hr>
+                    <h6>Warranties</h6>
+                    @foreach($warranties as $item)
+                        @if($item->warranty)
+                        <p class="mb-1">
+                            <a href="{{ route('warranties.show', $item->warranty) }}" class="text-decoration-none">
+                                <i class="bi bi-shield-check"></i> {{ $item->warranty->warranty_no }} - {{ $item->product->name }}
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                Valid until: {{ $item->warranty->end_date->format('M d, Y') }} 
+                                @if($item->warranty->is_active)
+                                    <span class="badge bg-success">Active</span>
+                                @else
+                                    <span class="badge bg-danger">Expired</span>
+                                @endif
+                            </small>
+                        </p>
+                        @endif
                     @endforeach
                     @endif
                 </div>

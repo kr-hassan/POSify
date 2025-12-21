@@ -53,6 +53,18 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('warranties.*') ? 'active' : '' }}" href="{{ route('warranties.index') }}">
+                    <i class="bi bi-shield-check"></i> Warranties
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('warranty-claims.*') ? 'active' : '' }}" href="{{ route('warranty-claims.index') }}">
+                    <i class="bi bi-exclamation-triangle"></i> Warranty Claims
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                     <i class="bi bi-cash-coin"></i> Payment Receipts
                 </a>
