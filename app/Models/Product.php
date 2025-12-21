@@ -21,6 +21,7 @@ class Product extends Model
         'stock',
         'alert_quantity',
         'tax_percent',
+        'warranty_period_months',
         'is_active',
     ];
 
@@ -30,6 +31,7 @@ class Product extends Model
         'stock' => 'integer',
         'alert_quantity' => 'integer',
         'tax_percent' => 'decimal:2',
+        'warranty_period_months' => 'integer',
         'is_active' => 'boolean',
     ];
 
@@ -46,6 +48,11 @@ class Product extends Model
     public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function warranties(): HasMany
+    {
+        return $this->hasMany(Warranty::class);
     }
 
     public function isLowStock(): bool

@@ -23,6 +23,7 @@ class StoreProductRequest extends FormRequest
             'stock' => 'required|integer|min:0',
             'alert_quantity' => 'required|integer|min:0',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'warranty_period_months' => 'required|integer|min:0|max:120',
             'is_active' => 'boolean',
         ];
     }
