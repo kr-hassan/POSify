@@ -1,0 +1,114 @@
+# Laravel & PHP
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/testing/.gitignore
+!storage/framework/views/.gitignore
+!storage/logs/.gitignore
+/bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# Environment & Configuration
+.env
+.env.backup
+.env.production
+.env.*.local
+.env.local
+.phpunit.result.cache
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+/database/*.sqlite
+/database/*.sqlite3
+
+# IDE & Editor
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.phpactor.json
+/.zed
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Composer
+/auth.json
+composer.phar
+/vendor/
+
+# NPM
+/node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build & Assets
+/public/build/
+/public/hot
+/public/mix-manifest.json
+/public/.htaccess
+
+# Logs
+*.log
+/storage/logs/*.log
+!storage/logs/.gitignore
+
+# Testing
+/.phpunit.cache
+/phpunit.xml
+.phpunit.result.cache
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Laravel specific
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.fleet
+/.idea
+/.vscode
+/.nova
+/.phpactor.json
+/.zed
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Documentation (optional - remove if you want to commit docs)
+# /docs/
+# *.md
+# !README.md
