@@ -17,6 +17,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyClaimController;
+use App\Http\Controllers\RepairController;
+use App\Http\Controllers\ReturnController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -92,6 +94,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{warrantyClaim}', [WarrantyClaimController::class, 'show'])->name('show');
         Route::get('/{warrantyClaim}/receipt', [WarrantyClaimController::class, 'receipt'])->name('receipt');
         Route::patch('/{warrantyClaim}/status', [WarrantyClaimController::class, 'updateStatus'])->name('update-status');
+    });
+    
+    // Repairs (Warranty-based repair workflow)
+    Route::prefix('repairs')->name('repairs.')->group(function () {
+        Route::get('/', [RepairController::class, 'index'])->name('index');
+        Route::get('/create-from-sale/{sale}', [RepairController::class, 'createFromSale'])->name('create-from-sale');
+        Route::post('/create-from-sale/{sale}', [RepairController::class, 'storeFromSale'])->name('store-from-sale');
+        Route::get('/{repair}', [RepairController::class, 'show'])->name('show');
+        Route::get('/{repair}/return-receipt', [RepairController::class, 'returnReceipt'])->name('return-receipt');
+        Route::post('/{repair}/mark-received', [RepairController::class, 'markAsReceived'])->name('mark-received');
+        Route::post('/{repair}/mark-completed', [RepairController::class, 'markAsCompleted'])->name('mark-completed');
+        Route::post('/{repair}/mark-returned', [RepairController::class, 'markAsReturned'])->name('mark-returned');
+    });
+    
+    // Returns (Product return workflow - refund/exchange)
+    Route::prefix('returns')->name('returns.')->group(function () {
+        Route::get('/', [ReturnController::class, 'index'])->name('index');
+        Route::get('/create-from-sale/{sale}', [ReturnController::class, 'createFromSale'])->name('create-from-sale');
+        Route::post('/create-from-sale/{sale}', [ReturnController::class, 'storeFromSale'])->name('store-from-sale');
+        Route::get('/{productReturn}', [ReturnController::class, 'show'])->name('show');
+        Route::post('/{productReturn}/approve', [ReturnController::class, 'approve'])->name('approve');
+        Route::post('/{productReturn}/process', [ReturnController::class, 'process'])->name('process');
+        Route::post('/{productReturn}/reject', [ReturnController::class, 'reject'])->name('reject');
     });
     
     // Purchases

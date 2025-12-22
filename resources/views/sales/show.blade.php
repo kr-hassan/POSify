@@ -10,10 +10,32 @@
             @php
                 $totalReturned = $sale->total_returned;
                 $remainingAmount = $sale->total_amount - $totalReturned;
+                // Check if there are items with active warranties for repair
+                $hasActiveWarranties = $sale->saleItems->filter(function($item) {
+                    return $item->warranty && $item->warranty->is_active;
+                })->count() > 0;
+                // Check if there are returnable items
+                $hasReturnableItems = $sale->saleItems->filter(function($item) {
+                    return $item->can_be_returned;
+                })->count() > 0;
             @endphp
+            @can('repair.create')
+            @if($hasActiveWarranties)
+            <a href="{{ route('repairs.create-from-sale', $sale) }}" class="btn btn-primary">
+                <i class="bi bi-tools"></i> Create Repair Claim
+            </a>
+            @endif
+            @endcan
+            @can('return.create')
+            @if($hasReturnableItems)
+            <a href="{{ route('returns.create-from-sale', $sale) }}" class="btn btn-warning">
+                <i class="bi bi-arrow-return-left"></i> Create Return
+            </a>
+            @endif
+            @endcan
             @if($remainingAmount > 0)
-            <a href="{{ route('sale-returns.create', $sale) }}" class="btn btn-warning">
-                <i class="bi bi-arrow-return-left"></i> Return Products
+            <a href="{{ route('sale-returns.create', $sale) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-return-left"></i> Legacy Return
             </a>
             @endif
             <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-info" target="_blank">
@@ -59,8 +81,20 @@
                                                 </span>
                                             </small>
                                         @endif
+                                        @if($item->returned_quantity > 0)
+                                            <br><small>
+                                                <span class="badge bg-danger">
+                                                    Returned: {{ $item->returned_quantity }} / {{ $item->quantity }}
+                                                </span>
+                                            </small>
+                                        @endif
                                     </td>
-                                    <td>{{ $item->quantity }}</td>
+                                    <td>
+                                        {{ $item->quantity }}
+                                        @if($item->returned_quantity > 0)
+                                            <br><small class="text-danger">({{ $item->returned_quantity }} returned)</small>
+                                        @endif
+                                    </td>
                                     <td>${{ number_format($item->price, 2) }}</td>
                                     <td>${{ number_format($item->total, 2) }}</td>
                                 </tr>

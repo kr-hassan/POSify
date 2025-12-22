@@ -97,6 +97,16 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#repairs" type="button">
+                        Repairs ({{ $customer->warranties()->whereHas('warrantyClaims', function($q) { $q->where('claim_type', 'repair'); })->count() }})
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#returns" type="button">
+                        Returns ({{ $customer->productReturns()->count() }})
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payments" type="button">
                         Payment Receipts ({{ $customer->payments->count() }})
                     </button>
@@ -134,7 +144,10 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-sm btn-info" target="_blank">
+                                                <a href="{{ route('sales.show', $sale) }}" class="btn btn-sm btn-primary" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ route('sales.invoice', $sale) }}" class="btn btn-sm btn-info" target="_blank" title="Print Invoice">
                                                     <i class="bi bi-printer"></i>
                                                 </a>
                                             </td>
@@ -142,6 +155,139 @@
                                         @empty
                                         <tr>
                                             <td colspan="6" class="text-center">No sales found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="repairs">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim No</th>
+                                            <th>Product</th>
+                                            <th>Warranty No</th>
+                                            <th>Issue</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $repairClaims = \App\Models\WarrantyClaim::whereHas('warranty', function($q) use ($customer) {
+                                                $q->where('customer_id', $customer->id);
+                                            })->where('claim_type', 'repair')->with(['warranty.product'])->latest()->get();
+                                        @endphp
+                                        @forelse($repairClaims as $claim)
+                                        <tr>
+                                            <td>{{ $claim->claim_no }}</td>
+                                            <td>{{ $claim->warranty->product->name }}</td>
+                                            <td>
+                                                <a href="{{ route('warranties.show', $claim->warranty) }}">
+                                                    {{ $claim->warranty->warranty_no }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <small>{{ \Illuminate\Support\Str::limit($claim->issue_description, 50) }}</small>
+                                            </td>
+                                            <td>{{ $claim->claim_date->format('M d, Y') }}</td>
+                                            <td>
+                                                @if($claim->status === 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @elseif($claim->status === 'in_progress')
+                                                    <span class="badge bg-info">In Progress</span>
+                                                @elseif($claim->status === 'completed')
+                                                    <span class="badge bg-success">Completed</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($claim->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('repairs.show', $claim) }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No repair claims found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="returns">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Return No</th>
+                                            <th>Invoice No</th>
+                                            <th>Type</th>
+                                            <th>Total Refund</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $returns = \App\Models\ProductReturn::where('customer_id', $customer->id)
+                                                ->with(['sale'])->latest()->get();
+                                        @endphp
+                                        @forelse($returns as $return)
+                                        <tr>
+                                            <td>{{ $return->return_no }}</td>
+                                            <td>
+                                                <a href="{{ route('sales.show', $return->sale) }}">
+                                                    {{ $return->sale->invoice_no }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                @if($return->return_type === 'refund')
+                                                    <span class="badge bg-warning">Refund</span>
+                                                @else
+                                                    <span class="badge bg-info">Exchange</span>
+                                                @endif
+                                            </td>
+                                            <td>${{ number_format($return->total_refund, 2) }}</td>
+                                            <td>{{ $return->return_date->format('M d, Y') }}</td>
+                                            <td>
+                                                @if($return->status === 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @elseif($return->status === 'approved')
+                                                    <span class="badge bg-info">Approved</span>
+                                                @elseif($return->status === 'processed')
+                                                    <span class="badge bg-success">Processed</span>
+                                                @elseif($return->status === 'rejected')
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($return->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('returns.show', $return) }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No returns found</td>
                                         </tr>
                                         @endforelse
                                     </tbody>

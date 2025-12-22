@@ -55,16 +55,24 @@ class DatabaseSeeder extends Seeder
             'edit expense',
             'delete expense',
             'view report',
+            // Repair permissions
+            'repair.create',
+            'repair.process',
+            'repair.complete',
+            // Return permissions
+            'return.create',
+            'return.approve',
+            'refund.process',
         ];
         
         foreach ($permissions as $permission) {
-            $Permission::create(['name' => $permission]);
+            $Permission::firstOrCreate(['name' => $permission]);
         }
         
         // Create roles
-        $adminRole = $Role::create(['name' => 'Admin']);
-        $managerRole = $Role::create(['name' => 'Manager']);
-        $cashierRole = $Role::create(['name' => 'Cashier']);
+        $adminRole = $Role::firstOrCreate(['name' => 'Admin']);
+        $managerRole = $Role::firstOrCreate(['name' => 'Manager']);
+        $cashierRole = $Role::firstOrCreate(['name' => 'Cashier']);
         
         // Assign all permissions to admin
         $adminRole->givePermissionTo($Permission::all());
@@ -79,35 +87,54 @@ class DatabaseSeeder extends Seeder
             'view purchase', 'create purchase', 'delete purchase',
             'view expense', 'create expense', 'edit expense', 'delete expense',
             'view report',
+            // Repair permissions
+            'repair.create', 'repair.process', 'repair.complete',
+            // Return permissions
+            'return.create', 'return.approve', 'refund.process',
         ]);
         
         // Assign permissions to cashier
         $cashierRole->givePermissionTo([
             'view pos', 'create sale', 'view sale',
             'view product', 'view category', 'view customer',
+            // Cashiers can create repair claims and returns, but not process them
+            'repair.create',
+            'return.create',
         ]);
         
-        // Create users
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@pos.com',
-            'password' => Hash::make('password'),
-        ]);
-        $admin->assignRole('Admin');
+        // Create users (only if they don't exist)
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@pos.com'],
+            [
+                'name' => 'Admin User',
+                'password' => Hash::make('password'),
+            ]
+        );
+        if (!$admin->hasRole('Admin')) {
+            $admin->assignRole('Admin');
+        }
         
-        $manager = User::create([
-            'name' => 'Manager User',
-            'email' => 'manager@pos.com',
-            'password' => Hash::make('password'),
-        ]);
-        $manager->assignRole('Manager');
+        $manager = User::firstOrCreate(
+            ['email' => 'manager@pos.com'],
+            [
+                'name' => 'Manager User',
+                'password' => Hash::make('password'),
+            ]
+        );
+        if (!$manager->hasRole('Manager')) {
+            $manager->assignRole('Manager');
+        }
         
-        $cashier = User::create([
-            'name' => 'Cashier User',
-            'email' => 'cashier@pos.com',
-            'password' => Hash::make('password'),
-        ]);
-        $cashier->assignRole('Cashier');
+        $cashier = User::firstOrCreate(
+            ['email' => 'cashier@pos.com'],
+            [
+                'name' => 'Cashier User',
+                'password' => Hash::make('password'),
+            ]
+        );
+        if (!$cashier->hasRole('Cashier')) {
+            $cashier->assignRole('Cashier');
+        }
         
         // Create categories
         $categories = [
@@ -119,7 +146,7 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::firstOrCreate(['name' => $category['name']], $category);
         }
         
         // Create products
@@ -131,7 +158,7 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($products as $product) {
-            Product::create($product);
+            Product::firstOrCreate(['sku' => $product['sku']], $product);
         }
         
         // Create customers
@@ -141,7 +168,7 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($customers as $customer) {
-            Customer::create($customer);
+            Customer::firstOrCreate(['email' => $customer['email']], $customer);
         }
         
         // Create suppliers
@@ -151,7 +178,7 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($suppliers as $supplier) {
-            Supplier::create($supplier);
+            Supplier::firstOrCreate(['name' => $supplier['name']], $supplier);
         }
         
         // Create expense categories
@@ -163,7 +190,7 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($expenseCategories as $category) {
-            ExpenseCategory::create($category);
+            ExpenseCategory::firstOrCreate(['name' => $category['name']], $category);
         }
     }
 }
