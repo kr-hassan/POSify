@@ -142,3 +142,4 @@ If you encounter issues:
 4. Check file permissions: `chmod -R 775 storage bootstrap/cache`
 
 
+

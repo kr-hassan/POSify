@@ -19,3 +19,4 @@ class ExpenseCategory extends Model
 }
 
 
+

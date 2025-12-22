@@ -53,9 +53,25 @@ class Sale extends Model
         return $this->hasMany(SaleReturn::class);
     }
 
+    /**
+     * Get all product returns (new return system)
+     */
+    public function productReturns(): HasMany
+    {
+        return $this->hasMany(ProductReturn::class);
+    }
+
     public function getTotalReturnedAttribute()
     {
         return $this->saleReturns()->sum('total_amount');
+    }
+
+    /**
+     * Get total refunded amount from product returns
+     */
+    public function getTotalRefundedAttribute()
+    {
+        return $this->productReturns()->where('status', 'processed')->sum('total_refund');
     }
 }
 

@@ -50,8 +50,14 @@
                                     <span class="badge bg-danger">Rejected</span>
                                 @endif
                             </p>
+                            @if($warrantyClaim->received_date)
+                            <p><strong>Received Date:</strong> {{ $warrantyClaim->received_date->format('M d, Y') }}</p>
+                            @endif
                             @if($warrantyClaim->resolved_date)
                             <p><strong>Resolved Date:</strong> {{ $warrantyClaim->resolved_date->format('M d, Y') }}</p>
+                            @endif
+                            @if($warrantyClaim->returned_date)
+                            <p><strong>Returned Date:</strong> {{ $warrantyClaim->returned_date->format('M d, Y') }}</p>
                             @endif
                             <p><strong>Created By:</strong> {{ $warrantyClaim->user->name }}</p>
                         </div>
@@ -67,7 +73,13 @@
                     <p>{{ $warrantyClaim->resolution_notes }}</p>
                     @endif
 
-                    @if(auth()->user()->hasRole(['admin', 'manager']))
+                    @if($warrantyClaim->technician_notes)
+                    <hr>
+                    <p><strong>Technician Notes:</strong></p>
+                    <p>{{ $warrantyClaim->technician_notes }}</p>
+                    @endif
+
+                    @if(auth()->user()->hasRole(['Admin', 'Manager']) || auth()->user()->can('repair.process'))
                     <hr>
                     <h6>Update Claim Status</h6>
                     <form method="POST" action="{{ route('warranty-claims.update-status', $warrantyClaim) }}">
@@ -92,6 +104,53 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Update Status</button>
                     </form>
+                    @endif
+
+                    <!-- Return Product to Customer (for repair claims only) -->
+                    @if($warrantyClaim->claim_type === 'repair' && $warrantyClaim->status === 'completed' && !$warrantyClaim->returned_date)
+                    <hr>
+                    <div class="card border-success mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-box-arrow-right"></i> Return Product to Customer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> <strong>Repair completed!</strong> Now you can return the product to the customer.
+                            </div>
+                            <form method="POST" action="{{ route('repairs.mark-returned', $warrantyClaim) }}" id="returnForm">
+                                @csrf
+                                <div class="mb-3">
+                                    <label class="form-label">Returned Date *</label>
+                                    <input type="date" name="returned_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-box-arrow-right"></i> Mark as Returned to Customer & Print Receipt
+                                </button>
+                                <small class="d-block text-muted mt-2">
+                                    <i class="bi bi-printer"></i> A receipt will be printed automatically for the customer.
+                                </small>
+                            </form>
+                        </div>
+                    </div>
+                    @elseif($warrantyClaim->claim_type === 'repair' && $warrantyClaim->returned_date)
+                    <hr>
+                    <div class="card border-success mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-check-circle"></i> Product Returned to Customer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill"></i> <strong>Product returned!</strong> This product was returned to the customer on {{ $warrantyClaim->returned_date->format('M d, Y') }}.
+                            </div>
+                            <a href="{{ route('repairs.return-receipt', $warrantyClaim) }}" class="btn btn-info" target="_blank">
+                                <i class="bi bi-printer"></i> Print Return Receipt
+                            </a>
+                        </div>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -122,5 +181,56 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+@if($warrantyClaim->claim_type === 'repair' && $warrantyClaim->status === 'completed' && !$warrantyClaim->returned_date)
+<script>
+$(document).ready(function() {
+    $('#returnForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        
+        // Disable button
+        submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Processing...');
+        
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Open receipt in new window
+                    window.open(response.receipt_url, '_blank');
+                    
+                    // Show success message
+                    alert('Product returned successfully! Receipt opened in new window for printing.');
+                    
+                    // Reload page to update status
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Error: ' + response.message);
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.message || 'Error returning product';
+                alert(error);
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+});
+</script>
+@endif
+@endpush
 @endsection
 

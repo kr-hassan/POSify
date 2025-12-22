@@ -94,12 +94,28 @@ class WarrantyClaimController extends Controller
     {
         $query = WarrantyClaim::with(['warranty.product', 'warranty.customer', 'user']);
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        // Filter by claim type
+        if ($request->has('claim_type') && $request->claim_type !== '') {
+            // If specific type is selected, show only that type
+            $query->where('claim_type', $request->claim_type);
+        } else {
+            // By default, exclude refund (return) type claims unless explicitly requested
+            if (!$request->has('include_returns') || $request->include_returns != '1') {
+                $query->where('claim_type', '!=', 'refund');
+            }
         }
 
-        if ($request->has('claim_type')) {
-            $query->where('claim_type', $request->claim_type);
+        // Filter by returned status
+        if ($request->has('show_returned') && $request->show_returned == '1') {
+            // Show only returned products
+            $query->whereNotNull('returned_date');
+        } else {
+            // By default, exclude returned products (show only active/not returned)
+            $query->whereNull('returned_date');
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
         }
 
         if ($request->has('from_date') && $request->has('to_date')) {

@@ -25,3 +25,4 @@ echo "Now run: php artisan vendor:publish --provider=\"Spatie\Permission\Permiss
 echo "Then run: php artisan migrate --seed"
 
 
+

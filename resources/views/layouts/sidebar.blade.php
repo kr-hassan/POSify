@@ -47,14 +47,26 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('returns.*') ? 'active' : '' }}" href="{{ route('returns.index') }}">
+                    <i class="bi bi-arrow-return-left"></i> Returns
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('sale-returns.*') ? 'active' : '' }}" href="{{ route('sale-returns.index') }}">
-                    <i class="bi bi-arrow-return-left"></i> Product Returns
+                    <i class="bi bi-arrow-counterclockwise"></i> Legacy Returns
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('warranties.*') ? 'active' : '' }}" href="{{ route('warranties.index') }}">
                     <i class="bi bi-shield-check"></i> Warranties
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('repairs.*') ? 'active' : '' }}" href="{{ route('repairs.index') }}">
+                    <i class="bi bi-tools"></i> Repairs
                 </a>
             </li>
             

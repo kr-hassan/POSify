@@ -31,6 +31,22 @@ class Customer extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    /**
+     * Get all warranties for this customer
+     */
+    public function warranties(): HasMany
+    {
+        return $this->hasMany(Warranty::class);
+    }
+
+    /**
+     * Get all product returns for this customer
+     */
+    public function productReturns(): HasMany
+    {
+        return $this->hasMany(ProductReturn::class);
+    }
 }
 
 

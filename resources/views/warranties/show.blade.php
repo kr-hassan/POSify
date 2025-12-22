@@ -65,7 +65,7 @@
                     <p>{{ $warranty->notes }}</p>
                     @endif
 
-                    @if(auth()->user()->hasRole(['admin', 'manager']))
+                    @if(auth()->user()->hasRole(['Admin', 'Manager']))
                     <hr>
                     <form method="POST" action="{{ route('warranties.update-status', $warranty) }}" class="d-inline">
                         @csrf
