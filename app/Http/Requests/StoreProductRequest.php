@@ -18,6 +18,7 @@ class StoreProductRequest extends FormRequest
             'sku' => 'required|string|max:255|unique:products,sku',
             'barcode' => 'nullable|string|max:255|unique:products,barcode',
             'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'cost_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',

@@ -19,6 +19,7 @@ class UpdateProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:255', Rule::unique('products')->ignore($this->product)],
             'barcode' => ['nullable', 'string', 'max:255', Rule::unique('products')->ignore($this->product)],
             'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'cost_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',

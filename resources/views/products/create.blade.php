@@ -56,6 +56,24 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                <label class="form-label">Supplier</label>
+                                <select name="supplier_id" class="form-select @error('supplier_id') is-invalid @enderror">
+                                    <option value="">Select Supplier (Optional)</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                            {{ $supplier->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('supplier_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Primary supplier for this product</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Cost Price *</label>
                                 <input type="number" name="cost_price" class="form-control @error('cost_price') is-invalid @enderror" value="{{ old('cost_price') }}" step="0.01" min="0" required>
                                 @error('cost_price')
