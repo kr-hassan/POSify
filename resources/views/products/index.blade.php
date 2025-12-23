@@ -14,15 +14,25 @@
     <div class="card">
         <div class="card-body">
             <form method="GET" class="row g-3 mb-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="category_id" class="form-select">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="supplier_id" class="form-select">
+                        <option value="">All Suppliers</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                {{ $supplier->name }}
                             </option>
                         @endforeach
                     </select>
@@ -42,6 +52,7 @@
                             <th>Name</th>
                             <th>SKU</th>
                             <th>Category</th>
+                            <th>Supplier</th>
                             <th>Cost Price</th>
                             <th>Sell Price</th>
                             <th>Stock</th>
@@ -55,6 +66,13 @@
                             <td>{{ $product->name }}</td>
                             <td>{{ $product->sku }}</td>
                             <td>{{ $product->category->name }}</td>
+                            <td>
+                                @if($product->supplier)
+                                    <span class="badge bg-info">{{ $product->supplier->name }}</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td>${{ number_format($product->cost_price, 2) }}</td>
                             <td>${{ number_format($product->sell_price, 2) }}</td>
                             <td>
@@ -82,7 +100,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center">No products found</td>
+                            <td colspan="9" class="text-center">No products found</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -94,6 +112,7 @@
     </div>
 </div>
 @endsection
+
 
 
 

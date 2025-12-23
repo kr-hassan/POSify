@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'supplier']);
         
         if ($request->has('search')) {
             $search = $request->search;
@@ -27,20 +28,26 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
         
+        if ($request->has('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        
         if ($request->has('low_stock')) {
             $query->whereColumn('stock', '<=', 'alert_quantity');
         }
         
         $products = $query->latest()->paginate(20);
         $categories = Category::all();
+        $suppliers = Supplier::all();
         
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories', 'suppliers'));
     }
 
     public function create()
     {
         $categories = Category::all();
-        return view('products.create', compact('categories'));
+        $suppliers = Supplier::all();
+        return view('products.create', compact('categories', 'suppliers'));
     }
 
     public function store(StoreProductRequest $request)
@@ -51,14 +58,15 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product->load(['category', 'saleItems.sale', 'purchaseItems.purchase']);
+        $product->load(['category', 'supplier', 'saleItems.sale', 'purchaseItems.purchase']);
         return view('products.show', compact('product'));
     }
 
     public function edit(Product $product)
     {
         $categories = Category::all();
-        return view('products.edit', compact('product', 'categories'));
+        $suppliers = Supplier::all();
+        return view('products.edit', compact('product', 'categories', 'suppliers'));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -77,6 +85,7 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
 }
+
 
 
 

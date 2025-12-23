@@ -26,3 +26,4 @@ echo "Then run: php artisan migrate --seed"
 
 
 
+

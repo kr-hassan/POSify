@@ -1,3 +1,6 @@
+@php
+    $shopSettings = \App\Models\Setting::getShopSettings();
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,6 +20,11 @@
             padding-bottom: 10px;
             margin-bottom: 10px;
         }
+        .shop-info {
+            font-size: 10px;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
         .info {
             margin-bottom: 10px;
         }
@@ -35,6 +43,18 @@
             border-top: 1px dashed #000;
             padding-top: 10px;
         }
+        .advertisement {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+            font-size: 9px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .advertisement strong {
+            color: #333;
+        }
         @media print {
             @page {
                 size: 80mm auto;
@@ -45,8 +65,20 @@
 </head>
 <body>
     <div class="header">
-        <h2>PAYMENT RECEIPT</h2>
-        <p>Receipt No: {{ $payment->receipt_no }}</p>
+        <h2>{{ $shopSettings['shop_name'] }}</h2>
+        <div class="shop-info">
+            @if($shopSettings['shop_address'])
+                <div>{{ $shopSettings['shop_address'] }}</div>
+            @endif
+            @if($shopSettings['shop_phone'])
+                <div>Phone: {{ $shopSettings['shop_phone'] }}</div>
+            @endif
+            @if($shopSettings['shop_email'])
+                <div>Email: {{ $shopSettings['shop_email'] }}</div>
+            @endif
+        </div>
+        <h3 style="margin-top: 10px; margin-bottom: 5px;">PAYMENT RECEIPT</h3>
+        <p style="margin-top: 0;">Receipt No: {{ $payment->receipt_no }}</p>
     </div>
     
     <div class="info">
@@ -76,9 +108,23 @@
     </div>
     
     <div class="footer">
-        <p>Thank you for your payment!</p>
+        <p>{{ $shopSettings['footer_message'] ?? 'Thank you for your business!' }}</p>
         <p>This is a computer-generated receipt.</p>
     </div>
+    
+    @if(($shopSettings['show_advertisement'] ?? '0') == '1' && ($shopSettings['software_company_name'] ?? ''))
+    <div class="advertisement">
+        @if($shopSettings['software_company_tagline'] ?? '')
+            <div>{{ $shopSettings['software_company_tagline'] }}</div>
+        @endif
+        <div>
+            <strong>{{ $shopSettings['software_company_name'] }}</strong>
+            @if($shopSettings['software_company_website'] ?? '')
+                <br>{{ $shopSettings['software_company_website'] }}
+            @endif
+        </div>
+    </div>
+    @endif
     
     <script>
         window.onload = function() {
@@ -87,5 +133,6 @@
     </script>
 </body>
 </html>
+
 
 

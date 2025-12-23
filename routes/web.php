@@ -14,11 +14,13 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SupplierReturnController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyClaimController;
 use App\Http\Controllers\RepairController;
 use App\Http\Controllers\ReturnController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -122,6 +124,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Purchases
     Route::resource('purchases', PurchaseController::class)->except(['edit', 'update']);
     
+    // Supplier Returns
+    Route::prefix('supplier-returns')->name('supplier-returns.')->group(function () {
+        Route::get('/', [SupplierReturnController::class, 'index'])->name('index');
+        Route::get('/create', [SupplierReturnController::class, 'create'])->name('create');
+        Route::post('/', [SupplierReturnController::class, 'store'])->name('store');
+        Route::get('/{supplierReturn}', [SupplierReturnController::class, 'show'])->name('show');
+        Route::put('/{supplierReturn}/update-status', [SupplierReturnController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{supplierReturn}/process-refund', [SupplierReturnController::class, 'processRefund'])->name('process-refund');
+        Route::post('/{supplierReturn}/process-replacement', [SupplierReturnController::class, 'processReplacement'])->name('process-replacement');
+        Route::delete('/{supplierReturn}', [SupplierReturnController::class, 'destroy'])->name('destroy');
+    });
+    
     // Expenses
     Route::resource('expenses', ExpenseController::class);
     Route::resource('expense-categories', ExpenseCategoryController::class)->except(['show']);
@@ -137,7 +151,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+    
+    // Users Management
+    Route::resource('users', UserController::class);
+    Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.update-roles');
 });
 
 require __DIR__.'/auth.php';

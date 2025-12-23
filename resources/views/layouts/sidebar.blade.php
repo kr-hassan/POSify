@@ -41,6 +41,12 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('supplier-returns.*') ? 'active' : '' }}" href="{{ route('supplier-returns.index') }}">
+                    <i class="bi bi-arrow-return-right"></i> Supplier Returns
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('sales.*') ? 'active' : '' }}" href="{{ route('sales.index') }}">
                     <i class="bi bi-receipt"></i> Sales
                 </a>
@@ -97,6 +103,18 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.sales') }}">
                     <i class="bi bi-graph-up"></i> Reports
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                    <i class="bi bi-people"></i> Users
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
+                    <i class="bi bi-gear"></i> Settings
                 </a>
             </li>
         </ul>

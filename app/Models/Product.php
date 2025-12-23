@@ -16,6 +16,7 @@ class Product extends Model
         'sku',
         'barcode',
         'category_id',
+        'supplier_id',
         'cost_price',
         'sell_price',
         'stock',
@@ -38,6 +39,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function saleItems(): HasMany
