@@ -39,6 +39,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::get('/', [PosController::class, 'index'])->name('index');
         Route::get('/search', [PosController::class, 'searchProduct'])->name('search');
+        Route::get('/quick-search', [PosController::class, 'quickSearch'])->name('quick-search');
+        Route::get('/categories', [PosController::class, 'getCategories'])->name('categories');
         Route::get('/product/{id}', [PosController::class, 'getProduct'])->name('product');
     });
     

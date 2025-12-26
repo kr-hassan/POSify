@@ -26,6 +26,13 @@ class StoreProductRequest extends FormRequest
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'warranty_period_months' => 'required|integer|min:0|max:120',
             'is_active' => 'boolean',
+            // Medical fields
+            'requires_prescription' => 'boolean',
+            'hsn_code' => 'nullable|string|max:50',
+            'manufacturer' => 'nullable|string|max:255',
+            'composition' => 'nullable|string',
+            'schedule' => 'nullable|string|max:10',
+            'shelf_life_days' => 'nullable|integer|min:0',
         ];
     }
 }

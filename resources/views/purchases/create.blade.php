@@ -45,26 +45,52 @@
                         </div>
                         
                         <h6 class="mb-3">Purchase Items</h6>
-                        <div id="itemsContainer">
-                            <div class="row mb-2 item-row">
-                                <div class="col-md-5">
-                                    <select name="items[0][product_id]" class="form-select product-select" required>
-                                        <option value="">Select Product</option>
-                                        @foreach($products as $product)
-                                            <option value="{{ $product->id }}">{{ $product->name }} (Stock: {{ $product->stock }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <input type="number" name="items[0][quantity]" class="form-control" placeholder="Qty" min="1" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <input type="number" name="items[0][cost_price]" class="form-control" placeholder="Cost Price" step="0.01" min="0" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger remove-item">Remove</button>
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 25%;">Product *</th>
+                                        <th style="width: 8%;">Qty *</th>
+                                        <th style="width: 10%;">Cost Price *</th>
+                                        <th style="width: 12%;">Batch Number</th>
+                                        <th style="width: 12%;">Mfg. Date</th>
+                                        <th style="width: 12%;">Expiry Date</th>
+                                        <th style="width: 8%;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsContainer">
+                                    <tr class="item-row">
+                                        <td>
+                                            <select name="items[0][product_id]" class="form-select product-select" required>
+                                                <option value="">Select Product</option>
+                                                @foreach($products as $product)
+                                                    <option value="{{ $product->id }}">{{ $product->name }} (Stock: {{ $product->stock }})</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[0][quantity]" class="form-control" placeholder="Qty" min="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[0][cost_price]" class="form-control" placeholder="Cost" step="0.01" min="0" required>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="items[0][batch_number]" class="form-control" placeholder="Batch #">
+                                        </td>
+                                        <td>
+                                            <input type="date" name="items[0][manufacturing_date]" class="form-control">
+                                        </td>
+                                        <td>
+                                            <input type="date" name="items[0][expiry_date]" class="form-control expiry-date">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-danger remove-item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                         
                         <button type="button" class="btn btn-secondary mb-3" id="addItemBtn">
@@ -88,25 +114,36 @@ let itemIndex = 1;
 
 $('#addItemBtn').on('click', function() {
     const html = `
-        <div class="row mb-2 item-row">
-            <div class="col-md-5">
+        <tr class="item-row">
+            <td>
                 <select name="items[${itemIndex}][product_id]" class="form-select product-select" required>
                     <option value="">Select Product</option>
                     @foreach($products as $product)
                         <option value="{{ $product->id }}">{{ $product->name }} (Stock: {{ $product->stock }})</option>
                     @endforeach
                 </select>
-            </div>
-            <div class="col-md-2">
+            </td>
+            <td>
                 <input type="number" name="items[${itemIndex}][quantity]" class="form-control" placeholder="Qty" min="1" required>
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="items[${itemIndex}][cost_price]" class="form-control" placeholder="Cost Price" step="0.01" min="0" required>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-danger remove-item">Remove</button>
-            </div>
-        </div>
+            </td>
+            <td>
+                <input type="number" name="items[${itemIndex}][cost_price]" class="form-control" placeholder="Cost" step="0.01" min="0" required>
+            </td>
+            <td>
+                <input type="text" name="items[${itemIndex}][batch_number]" class="form-control" placeholder="Batch #">
+            </td>
+            <td>
+                <input type="date" name="items[${itemIndex}][manufacturing_date]" class="form-control">
+            </td>
+            <td>
+                <input type="date" name="items[${itemIndex}][expiry_date]" class="form-control expiry-date">
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-item">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
     `;
     $('#itemsContainer').append(html);
     itemIndex++;
@@ -117,6 +154,25 @@ $(document).on('click', '.remove-item', function() {
         $(this).closest('.item-row').remove();
     } else {
         alert('At least one item is required');
+    }
+});
+
+// Auto-calculate expiry date based on manufacturing date and product shelf life (if available)
+$(document).on('change', 'input[name*="[manufacturing_date]"]', function() {
+    const mfgDate = $(this).val();
+    const expiryInput = $(this).closest('tr').find('.expiry-date');
+    
+    if (mfgDate) {
+        // You can add logic here to auto-calculate expiry based on product shelf_life_days
+        // For now, just set a default 1 year expiry
+        const date = new Date(mfgDate);
+        date.setFullYear(date.getFullYear() + 1);
+        const expiryDate = date.toISOString().split('T')[0];
+        
+        // Only set if expiry date is empty
+        if (!expiryInput.val()) {
+            expiryInput.val(expiryDate);
+        }
     }
 });
 </script>

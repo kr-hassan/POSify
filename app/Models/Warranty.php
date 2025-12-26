@@ -21,7 +21,6 @@ class Warranty extends Model
         'start_date',
         'end_date',
         'warranty_period_months',
-        'warranty_period_days',
         'status',
         'notes',
     ];
