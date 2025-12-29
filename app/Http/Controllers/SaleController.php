@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\Product;
+use App\Models\Customer;
 use App\Http\Requests\StoreSaleRequest;
+use App\Mail\InvoiceMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -105,10 +108,20 @@ class SaleController extends Controller
                 
                 $saleItem = $sale->saleItems()->create([
                     'product_id' => $item['product_id'],
+                    'batch_id' => $item['batch_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'total' => $itemTotal,
                 ]);
+                
+                // Reduce stock and batch quantity if batch is specified
+                if (isset($item['batch_id']) && $item['batch_id']) {
+                    $batch = \App\Models\ProductBatch::findOrFail($item['batch_id']);
+                    if ($batch->remaining_quantity < $item['quantity']) {
+                        throw new \Exception("Insufficient batch quantity for {$product->name}. Available: {$batch->remaining_quantity}");
+                    }
+                    $batch->decrement('remaining_quantity', $item['quantity']);
+                }
                 
                 // Reduce stock
                 $product->decrement('stock', $item['quantity']);
@@ -127,7 +140,6 @@ class SaleController extends Controller
                 if ($warrantyMonths > 0) {
                     $startDate = Carbon::parse($sale->sale_date);
                     $endDate = $startDate->copy()->addMonths($warrantyMonths);
-                    $warrantyDays = $startDate->diffInDays($endDate);
                     
                     // Generate warranty number
                     $warrantyNo = 'WAR-' . date('Ymd') . '-' . strtoupper(Str::random(6));
@@ -142,7 +154,6 @@ class SaleController extends Controller
                         'start_date' => $startDate,
                         'end_date' => $endDate,
                         'warranty_period_months' => $warrantyMonths,
-                        'warranty_period_days' => $warrantyDays,
                         'status' => 'active',
                     ]);
                 }
@@ -165,13 +176,74 @@ class SaleController extends Controller
             
             DB::commit();
             
-            return response()->json([
+            // Send invoice email
+            $emailSent = false;
+            $emailAddress = null;
+            $emailError = null;
+            
+            // Determine if we should send email and to which address
+            $shouldSendEmail = false;
+            $emailToSend = null;
+            
+            if ($request->customer_id) {
+                // Registered customer - check if they have email
+                $customer = Customer::find($request->customer_id);
+                if ($customer && $customer->email) {
+                    // Registered customer with email - send automatically (always)
+                    $shouldSendEmail = true;
+                    $emailToSend = $customer->email;
+                } elseif ($request->customer_email) {
+                    // Registered customer without email but provided email
+                    // Check if send_email flag is set (for checkbox)
+                    $sendEmailFlag = filter_var($request->get('send_email', false), FILTER_VALIDATE_BOOLEAN);
+                    if ($sendEmailFlag) {
+                        $shouldSendEmail = true;
+                        $emailToSend = $request->customer_email;
+                    }
+                }
+            } elseif ($request->customer_email) {
+                // Walk-in customer - send only if email provided and checkbox checked
+                $sendEmailFlag = filter_var($request->get('send_email', false), FILTER_VALIDATE_BOOLEAN);
+                if ($sendEmailFlag) {
+                    $shouldSendEmail = true;
+                    $emailToSend = $request->customer_email;
+                }
+            }
+            
+            // Send email if conditions are met
+            if ($shouldSendEmail && $emailToSend) {
+                try {
+                    \Log::info('Attempting to send invoice email to: ' . $emailToSend);
+                    Mail::to($emailToSend)->send(new InvoiceMail($sale));
+                    $emailSent = true;
+                    $emailAddress = $emailToSend;
+                    \Log::info('Invoice email sent successfully to: ' . $emailToSend);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the sale
+                    $emailError = $e->getMessage();
+                    \Log::error('Failed to send invoice email to ' . $emailToSend . ': ' . $emailError);
+                    \Log::error('Email error details: ' . $e->getTraceAsString());
+                }
+            } else {
+                \Log::info('Email not sent. shouldSendEmail: ' . ($shouldSendEmail ? 'true' : 'false') . ', emailToSend: ' . ($emailToSend ?? 'null'));
+            }
+            
+            $response = [
                 'success' => true,
                 'message' => 'Sale completed successfully',
                 'sale_id' => $sale->id,
                 'invoice_no' => $invoiceNo,
                 'invoice_url' => route('sales.invoice', $sale),
-            ]);
+            ];
+            
+            if ($emailSent) {
+                $response['email_sent'] = true;
+                $response['email_address'] = $emailAddress;
+            } elseif ($emailError) {
+                $response['email_error'] = $emailError;
+            }
+            
+            return response()->json($response);
             
         } catch (\Exception $e) {
             DB::rollBack();

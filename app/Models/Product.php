@@ -24,6 +24,13 @@ class Product extends Model
         'tax_percent',
         'warranty_period_months',
         'is_active',
+        // Medical fields
+        'requires_prescription',
+        'hsn_code',
+        'manufacturer',
+        'composition',
+        'schedule',
+        'shelf_life_days',
     ];
 
     protected $casts = [
@@ -34,6 +41,8 @@ class Product extends Model
         'tax_percent' => 'decimal:2',
         'warranty_period_months' => 'integer',
         'is_active' => 'boolean',
+        'requires_prescription' => 'boolean',
+        'shelf_life_days' => 'integer',
     ];
 
     public function category(): BelongsTo
@@ -61,9 +70,30 @@ class Product extends Model
         return $this->hasMany(Warranty::class);
     }
 
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
     public function isLowStock(): bool
     {
         return $this->stock <= $this->alert_quantity;
+    }
+
+    /**
+     * Get available batches (non-expired, with stock)
+     */
+    public function getAvailableBatchesAttribute()
+    {
+        return $this->batches()
+            ->where('is_active', true)
+            ->where('remaining_quantity', '>', 0)
+            ->where(function ($query) {
+                $query->whereNull('expiry_date')
+                    ->orWhere('expiry_date', '>', now());
+            })
+            ->orderBy('expiry_date', 'asc')
+            ->get();
     }
 }
 
