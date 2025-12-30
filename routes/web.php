@@ -149,6 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
         Route::get('/profit', [ReportController::class, 'profit'])->name('profit');
         Route::get('/customer-due', [ReportController::class, 'customerDue'])->name('customer-due');
+        Route::get('/users', [ReportController::class, 'users'])->name('users');
     });
     
     // Settings
