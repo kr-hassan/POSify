@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Http\Requests\StorePurchaseRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,11 +67,26 @@ class PurchaseController extends Controller
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
                 
-                $purchase->purchaseItems()->create([
+                $purchaseItem = $purchase->purchaseItems()->create([
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                 ]);
+                
+                // Create batch if batch information is provided
+                if (!empty($item['batch_number']) || !empty($item['expiry_date'])) {
+                    ProductBatch::create([
+                        'product_id' => $item['product_id'],
+                        'purchase_id' => $purchase->id,
+                        'batch_number' => $item['batch_number'] ?? null,
+                        'manufacturing_date' => $item['manufacturing_date'] ?? null,
+                        'expiry_date' => $item['expiry_date'] ?? null,
+                        'quantity' => $item['quantity'],
+                        'remaining_quantity' => $item['quantity'],
+                        'cost_price' => $item['cost_price'],
+                        'is_active' => true,
+                    ]);
+                }
                 
                 // Update product cost price and increase stock
                 $product->update([
@@ -129,9 +145,3 @@ class PurchaseController extends Controller
         }
     }
 }
-
-
-
-
-
-

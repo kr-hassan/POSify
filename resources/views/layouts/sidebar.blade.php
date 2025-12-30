@@ -107,6 +107,12 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('reports.users') ? 'active' : '' }}" href="{{ route('reports.users') }}">
+                    <i class="bi bi-person-badge"></i> User-Wise Report
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                     <i class="bi bi-people"></i> Users
                 </a>

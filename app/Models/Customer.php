@@ -16,10 +16,19 @@ class Customer extends Model
         'email',
         'address',
         'balance',
+        // Patient fields
+        'gender',
+        'date_of_birth',
+        'blood_group',
+        'allergies',
+        'medical_history',
+        'is_patient',
     ];
 
     protected $casts = [
         'balance' => 'decimal:2',
+        'date_of_birth' => 'date',
+        'is_patient' => 'boolean',
     ];
 
     public function sales(): HasMany
@@ -46,6 +55,17 @@ class Customer extends Model
     public function productReturns(): HasMany
     {
         return $this->hasMany(ProductReturn::class);
+    }
+
+    /**
+     * Calculate age from date of birth
+     */
+    public function getAgeAttribute(): ?int
+    {
+        if (!$this->date_of_birth) {
+            return null;
+        }
+        return $this->date_of_birth->age;
     }
 }
 

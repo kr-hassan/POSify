@@ -7,6 +7,9 @@ use App\Models\Purchase;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Expense;
+use App\Models\User;
+use App\Models\Payment;
+use App\Models\ProductReturn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -112,6 +115,96 @@ class ReportController extends Controller
         $totalDue = $customers->sum('balance');
         
         return view('reports.customer-due', compact('customers', 'totalDue'));
+    }
+
+    public function users(Request $request)
+    {
+        $fromDate = $request->from_date ?? now()->startOfMonth()->toDateString();
+        $toDate = $request->to_date ?? now()->toDateString();
+        $selectedUserId = $request->user_id;
+
+        // Get all users
+        $users = User::all();
+
+        // Get user-wise statistics
+        $userStats = [];
+        
+        foreach ($users as $user) {
+            // Sales statistics
+            $salesQuery = Sale::where('user_id', $user->id)
+                ->whereBetween('sale_date', [$fromDate, $toDate]);
+            
+            $totalSales = $salesQuery->sum('total_amount');
+            $salesCount = $salesQuery->count();
+            $totalPaid = $salesQuery->sum('paid_amount');
+            $totalDue = $salesQuery->sum('due_amount');
+            $avgSale = $salesCount > 0 ? $totalSales / $salesCount : 0;
+
+            // Payments collected
+            $paymentsQuery = Payment::where('user_id', $user->id)
+                ->whereBetween('payment_date', [$fromDate, $toDate]);
+            
+            $paymentsCollected = $paymentsQuery->sum('amount');
+            $paymentsCount = $paymentsQuery->count();
+
+            // Returns processed (ProductReturn uses created_by, not user_id)
+            $returnsQuery = ProductReturn::where('created_by', $user->id)
+                ->whereBetween('return_date', [$fromDate, $toDate]);
+            
+            $returnsProcessed = $returnsQuery->count();
+            $returnsAmount = $returnsQuery->sum('total_refund');
+
+            $userStats[] = [
+                'user' => $user,
+                'total_sales' => $totalSales,
+                'sales_count' => $salesCount,
+                'total_paid' => $totalPaid,
+                'total_due' => $totalDue,
+                'avg_sale' => $avgSale,
+                'payments_collected' => $paymentsCollected,
+                'payments_count' => $paymentsCount,
+                'returns_processed' => $returnsProcessed,
+                'returns_amount' => $returnsAmount,
+            ];
+        }
+
+        // Sort by total sales descending
+        usort($userStats, function($a, $b) {
+            return $b['total_sales'] <=> $a['total_sales'];
+        });
+
+        // Calculate totals
+        $grandTotalSales = collect($userStats)->sum('total_sales');
+        $grandTotalPaid = collect($userStats)->sum('total_paid');
+        $grandTotalDue = collect($userStats)->sum('total_due');
+        $grandTotalPayments = collect($userStats)->sum('payments_collected');
+        $grandTotalReturns = collect($userStats)->sum('returns_amount');
+        $grandTotalSalesCount = collect($userStats)->sum('sales_count');
+
+        // If specific user selected, get detailed sales
+        $detailedSales = null;
+        if ($selectedUserId) {
+            $detailedSales = Sale::with(['customer', 'saleItems.product'])
+                ->where('user_id', $selectedUserId)
+                ->whereBetween('sale_date', [$fromDate, $toDate])
+                ->latest()
+                ->get();
+        }
+
+        return view('reports.users', compact(
+            'userStats',
+            'users',
+            'fromDate',
+            'toDate',
+            'selectedUserId',
+            'grandTotalSales',
+            'grandTotalPaid',
+            'grandTotalDue',
+            'grandTotalPayments',
+            'grandTotalReturns',
+            'grandTotalSalesCount',
+            'detailedSales'
+        ));
     }
 }
 

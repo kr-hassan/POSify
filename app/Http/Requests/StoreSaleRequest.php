@@ -15,8 +15,11 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'customer_id' => 'nullable|exists:customers,id',
+            'customer_email' => 'nullable|email|max:255',
+            'send_email' => 'nullable|in:0,1,true,false',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.batch_id' => 'nullable|exists:product_batches,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
