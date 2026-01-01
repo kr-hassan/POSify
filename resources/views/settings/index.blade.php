@@ -32,9 +32,39 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('settings.update') }}" method="POST">
+                    <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        <div class="mb-3">
+                            <label for="shop_logo" class="form-label">
+                                <i class="bi bi-image"></i> Shop Logo
+                            </label>
+                            <input type="file" 
+                                   class="form-control @error('shop_logo') is-invalid @enderror" 
+                                   id="shop_logo" 
+                                   name="shop_logo" 
+                                   accept="image/*"
+                                   onchange="previewLogo(this)">
+                            @error('shop_logo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">
+                                Upload a logo image (PNG, JPG, GIF). Recommended size: 200x100px. This will appear on the login page.
+                            </small>
+                            @if($shopLogo)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $shopLogo) }}" alt="Shop Logo" id="logo_preview" style="max-height: 100px; max-width: 200px; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+                                    <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeLogo()">
+                                        <i class="bi bi-trash"></i> Remove Logo
+                                    </button>
+                                </div>
+                            @else
+                                <div class="mt-2">
+                                    <img id="logo_preview" src="" alt="Logo Preview" style="max-height: 100px; max-width: 200px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; display: none;">
+                                </div>
+                            @endif
+                        </div>
 
                         <div class="mb-3">
                             <label for="shop_name" class="form-label">
@@ -223,6 +253,38 @@
 </div>
 
 <script>
+    // Logo preview
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('logo_preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeLogo() {
+        if (confirm('Are you sure you want to remove the logo?')) {
+            // Add hidden input to indicate logo removal
+            const form = document.querySelector('form');
+            const removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'remove_logo';
+            removeInput.value = '1';
+            form.appendChild(removeInput);
+            
+            // Hide preview
+            document.getElementById('logo_preview').style.display = 'none';
+            document.getElementById('shop_logo').value = '';
+            
+            // Submit form
+            form.submit();
+        }
+    }
+
     // Live preview update
     document.getElementById('shop_name').addEventListener('input', function() {
         document.getElementById('preview_shop_name').textContent = this.value || 'POS SYSTEM';

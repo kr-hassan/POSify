@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -15,13 +16,14 @@ class SettingController extends Controller
         $shopAddress = Setting::get('shop_address', '');
         $shopPhone = Setting::get('shop_phone', '');
         $shopEmail = Setting::get('shop_email', '');
+        $shopLogo = Setting::get('shop_logo', '');
         $footerMessage = Setting::get('footer_message', 'Thank you for your business!');
         $softwareCompanyName = Setting::get('software_company_name', '');
         $softwareCompanyWebsite = Setting::get('software_company_website', '');
         $softwareCompanyTagline = Setting::get('software_company_tagline', '');
         $showAdvertisement = Setting::get('show_advertisement', '0');
 
-        return view('settings.index', compact('shopName', 'shopAddress', 'shopPhone', 'shopEmail', 'footerMessage', 'softwareCompanyName', 'softwareCompanyWebsite', 'softwareCompanyTagline', 'showAdvertisement'));
+        return view('settings.index', compact('shopName', 'shopAddress', 'shopPhone', 'shopEmail', 'shopLogo', 'footerMessage', 'softwareCompanyName', 'softwareCompanyWebsite', 'softwareCompanyTagline', 'showAdvertisement'));
     }
 
     public function update(Request $request)
@@ -31,16 +33,38 @@ class SettingController extends Controller
             'shop_address' => 'nullable|string|max:500',
             'shop_phone' => 'nullable|string|max:50',
             'shop_email' => 'nullable|email|max:255',
+            'shop_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'footer_message' => 'nullable|string|max:500',
             'software_company_name' => 'nullable|string|max:255',
             'software_company_website' => 'nullable|url|max:255',
             'software_company_tagline' => 'nullable|string|max:500',
             'show_advertisement' => 'nullable|boolean',
+            'remove_logo' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
 
         try {
+            // Handle logo upload or removal
+            if ($request->has('remove_logo') && $request->remove_logo == '1') {
+                // Remove existing logo
+                $existingLogo = Setting::get('shop_logo', '');
+                if ($existingLogo && Storage::disk('public')->exists($existingLogo)) {
+                    Storage::disk('public')->delete($existingLogo);
+                }
+                Setting::set('shop_logo', '', 'text', 'shop', 'Shop Logo');
+            } elseif ($request->hasFile('shop_logo')) {
+                // Delete old logo if exists
+                $existingLogo = Setting::get('shop_logo', '');
+                if ($existingLogo && Storage::disk('public')->exists($existingLogo)) {
+                    Storage::disk('public')->delete($existingLogo);
+                }
+                
+                // Upload new logo
+                $logoPath = $request->file('shop_logo')->store('logos', 'public');
+                Setting::set('shop_logo', $logoPath, 'text', 'shop', 'Shop Logo');
+            }
+
             // Update shop settings
             Setting::set('shop_name', $request->shop_name, 'text', 'shop', 'Shop/Business Name');
             Setting::set('shop_address', $request->shop_address ?? '', 'textarea', 'shop', 'Shop Address');

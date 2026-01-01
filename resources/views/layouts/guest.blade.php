@@ -15,10 +15,19 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
+        @php
+            $shopLogo = \App\Models\Setting::get('shop_logo', '');
+        @endphp
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+            <div class="mb-4">
+                <a href="/" class="flex items-center justify-center">
+                    @if($shopLogo && file_exists(public_path('storage/' . $shopLogo)))
+                        <img src="{{ asset('storage/' . $shopLogo) }}" 
+                             alt="{{ \App\Models\Setting::get('shop_name', 'POS System') }}" 
+                             class="max-h-20 max-w-48 object-contain">
+                    @else
+                        <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                    @endif
                 </a>
             </div>
 

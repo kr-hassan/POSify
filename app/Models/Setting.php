@@ -72,6 +72,7 @@ class Setting extends Model
                 'shop_address' => $shopSettings['shop_address'] ?? '',
                 'shop_phone' => $shopSettings['shop_phone'] ?? '',
                 'shop_email' => $shopSettings['shop_email'] ?? '',
+                'shop_logo' => $shopSettings['shop_logo'] ?? '',
                 'footer_message' => $shopSettings['footer_message'] ?? 'Thank you for your business!',
                 'software_company_name' => $adSettings['software_company_name'] ?? '',
                 'software_company_website' => $adSettings['software_company_website'] ?? '',
