@@ -40,3 +40,7 @@ class Purchase extends Model
 
 
 
+
+
+
+
